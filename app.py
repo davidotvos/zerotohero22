@@ -12,10 +12,22 @@ def hello_world():
 @app.route('/cashier', methods=['POST'])
 def cashier():
     data = request.get_json()
+    
     first_name = data['firstName']
     last_name = data['lastName']
 
     return jsonify({'result' : 'Success!', 'firstName' : first_name, 'lastName' : last_name})
+
+
+@app.route('/sale', methods=['POST'])
+def sale():
+    data = request.get_json()
+    
+    sold_items = data['soldItems']
+    cashier_id = data['cashierId']
+    price = data['price']
+
+    return jsonify({'soldItems' : sold_items, "cashierId" : cashier_id, "price" : price})
 
 
 
