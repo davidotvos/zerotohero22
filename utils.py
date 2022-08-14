@@ -1,5 +1,6 @@
 import uuid
 
+
 # generál egy egyedi id-t a cashiernek
 def generate_id(cashiers):
     temp_id = uuid.uuid4()
@@ -9,6 +10,7 @@ def generate_id(cashiers):
 
     return temp_id
 
+
 # benne van-e az id az adatbázisban
 def check_if_id_in_database(cashiers, id):
     for c in cashiers():
@@ -16,6 +18,7 @@ def check_if_id_in_database(cashiers, id):
             return True
     
     return False
+
 
 # menu és item lista beolvasás
 def read_items_and_menu(itemlist:list, menulist:list):
@@ -29,7 +32,9 @@ def read_items_and_menu(itemlist:list, menulist:list):
 
 
 
+def create_cashier_database():
+    pass
+
 
 def save_cashier(cashiers):
-
     pass
