@@ -20,7 +20,7 @@ def hello_world():
     return render_template('index.html')
 
 
-@app.route('/cashier', methods=['POST', 'GET'])
+@app.route('/cashier', methods=['POST'])
 def cashier():
 
     if request.method == 'POST':
@@ -30,7 +30,9 @@ def cashier():
         firstName = data['firstName']
         lastName = data['lastName']
 
-        return jsonify({'result' : 'Success!', 'firstName' : firstName, 'lastName' : lastName})
+        utils.add_cashier(cashiers, firstName, lastName)
+
+        return jsonify({'result' : 'Success!'})
 
 
 
@@ -48,5 +50,6 @@ def sale():
 
 if __name__ == '__main__':
     utils.read_items_and_menu(items, menu)
+    utils.create_or_read_cashier_database(cashiers)
     
     app.run(debug=True)

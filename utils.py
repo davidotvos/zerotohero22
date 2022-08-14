@@ -1,5 +1,6 @@
+import string
 import uuid
-
+import os.path
 
 # generál egy egyedi id-t a cashiernek
 def generate_id(cashiers):
@@ -8,13 +9,13 @@ def generate_id(cashiers):
     if check_if_id_in_database(cashiers, temp_id):
         temp_id = generate_id(cashiers)
 
-    return temp_id
+    return str(temp_id)
 
 
 # benne van-e az id az adatbázisban
 def check_if_id_in_database(cashiers, id):
-    for c in cashiers():
-        if id == c.id:
+    for c in cashiers:
+        if id == c[0]:
             return True
     
     return False
@@ -22,19 +23,40 @@ def check_if_id_in_database(cashiers, id):
 
 # menu és item lista beolvasás
 def read_items_and_menu(itemlist:list, menulist:list):
-    for line in open('items.csv'):
+    read_csv('items.csv', itemlist)
+    read_csv('menu.csv', menulist)
+
+
+# csv fájl olvasása soronként
+def read_csv(filename, list:list):
+    for line in open(filename):
         csv_row = line.split(';')
-        itemlist.append(csv_row)
-
-    for line in open('menu.csv'):
-            csv_row = line.split(';')
-            menulist.append(csv_row)
+        list.append(csv_row)
 
 
+# Ha nem létezik a fájl csinál egyet, ha létezik beolvassa
+def create_or_read_cashier_database(cashiers):
+    if os.path.exists('cashiers.csv'):
+        read_csv('cashiers.csv', cashiers)
 
-def create_cashier_database():
-    pass
+    else:
+        f = open('cashiers.csv', 'w')
 
 
-def save_cashier(cashiers):
-    pass
+# Cashier hozzáadása
+def add_cashier(cashiers, firstName, lastName):
+    templi = []
+    templi = [generate_id(cashiers), firstName, lastName]
+    cashiers.append(templi)
+    save_cashiers(cashiers)
+
+
+
+# Elmenti a cashierek adatait
+def save_cashiers(cashiers):
+    with open('cashiers.csv', 'w') as f:
+        for line in cashiers:
+
+            f.write(';'.join(line))
+
+
