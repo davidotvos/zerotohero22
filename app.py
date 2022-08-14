@@ -1,24 +1,18 @@
 from flask import Flask, render_template, request, jsonify, redirect
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.sql import text
+import utils
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+cashiers = []
+items = []
+menu = []
 
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+class Cashier:
+    def __init__(self, firstname, lastname):
+        self.id = utils.generate_id(cashiers)
+        self.firstname = firstname
+        self.lastname = lastname
 
-# adatbázis inicializálás
-db = SQLAlchemy(app)
-
-class Cashier(db.Model):
-    id = db.Column(db.String(30), primary_key=True)
-    first_name = db.Column(db.String(200), nullable=False)
-    last_name = db.Column(db.String(200), nullable=False)
-
-    def repr_(self):
-        return'<Name%r>' % self.id
-    
 
 
 @app.route('/', methods=['GET'])
@@ -36,21 +30,7 @@ def cashier():
         firstName = data['firstName']
         lastName = data['lastName']
 
-        new_cashier = Cashier(id = '2', first_name = firstName, last_name = lastName)
-
-        #return jsonify({'result' : 'Success!', 'firstName' : first_name, 'lastName' : last_name})
-        
-        #adatbázishoz adás
-        try:
-            db.session.add(new_cashier)
-            db.session.commit()
-            return redirect('/cashier')
-        except:
-            return 'Hiba az adatbázishoz adásnál!'
-
-    else:
-        cashiers = Cashier.query.order_by(Cashier.id)
-        return render_template('cashier.html', cashiers=cashiers)
+        return jsonify({'result' : 'Success!', 'firstName' : firstName, 'lastName' : lastName})
 
 
 
@@ -67,4 +47,6 @@ def sale():
 
 
 if __name__ == '__main__':
+    utils.read_items_and_menu(items, menu)
+    
     app.run(debug=True)
