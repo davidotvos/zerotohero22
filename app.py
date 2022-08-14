@@ -6,6 +6,7 @@ app = Flask(__name__)
 cashiers = []
 items = []
 menu = []
+sales = []
 
 class Cashier:
     def __init__(self, firstname, lastname):
@@ -30,7 +31,7 @@ def cashier():
         firstName = data['firstName']
         lastName = data['lastName']
 
-        utils.add_cashier(cashiers, firstName, lastName)
+        utils.add_cashier(cashiers, sales, firstName, lastName)
 
         return jsonify({'result' : 'Success!'})
 
@@ -41,18 +42,25 @@ def cashier():
 
 @app.route('/sale', methods=['POST'])
 def sale():
-    data = request.get_json()
-    
-    sold_items = data['soldItems']
-    cashier_id = data['cashierId']
-    price = data['price']
+    if request.method == 'POST':
 
-    return jsonify({'soldItems' : sold_items, "cashierId" : cashier_id, "price" : price})
+        data = request.get_json()
+        
+        sold_items = data['soldItems']
+        cashier_id = data['cashierId']
+        price = data['price']
 
+        utils.add_sale(cashiers, sales, sold_items, cashier_id, price)
+
+        return jsonify({'result' : 'sucess'})
+
+    else:
+        return sales
 
 
 if __name__ == '__main__':
     utils.read_items_and_menu(items, menu)
     utils.create_or_read_cashier_database(cashiers)
+    utils.create_or_read_sales_database(sales)
     
     app.run(debug=True)
