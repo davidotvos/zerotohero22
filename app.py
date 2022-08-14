@@ -20,7 +20,7 @@ def hello_world():
     return render_template('index.html')
 
 
-@app.route('/cashier', methods=['POST'])
+@app.route('/cashier', methods=['POST','GET'])
 def cashier():
 
     if request.method == 'POST':
@@ -33,6 +33,9 @@ def cashier():
         utils.add_cashier(cashiers, firstName, lastName)
 
         return jsonify({'result' : 'Success!'})
+
+    else:
+        return cashiers
 
 
 
