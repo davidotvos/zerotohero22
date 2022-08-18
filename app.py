@@ -51,22 +51,35 @@ def cashier():
 
 
 
-@app.route('/sale/<id>', methods=['POST', 'GET'])
-def sale(id):
-    if request.method == 'POST':
+@app.route('/sale', methods=['POST'])
+def sale():
+    
+    data = request.get_json()
+    
+    sold_items = data['soldItems']
+    cashier_id = data['cashierId']
+    price = data['price']
 
-        data = request.get_json()
-        
-        sold_items = data['soldItems']
-        cashier_id = data['cashierId']
-        price = data['price']
+    utils.add_sale(_database, sold_items, cashier_id, price)
 
-        utils.add_sale(_database, sold_items, cashier_id, price)
+    return jsonify({'result' : 'sucess'})
 
-        return jsonify({'result' : 'sucess'})
+
+
+@app.route('/sale/<id>', methods=['GET', 'PUT'])
+def sale_with_id(id):
+    if request.method == 'GET':
+
+        return utils.get_sale(_database['sales'], id)
 
     else:
-        return "the id is: " + id
+        #TODO
+        pass
+
+
+@app.route('/cashier/<id>', methods=['GET'])
+def cashier_with_id(id):
+    return utils.get_sales_with_cashier_id(_database['sales'], id)
 
 
 

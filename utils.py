@@ -134,7 +134,7 @@ def add_sale(database, soldItems, cashierId, price):
         "cashierId" : cashierId,
         "price" : price,
         "status" : status,
-        "difference" : float(price - real_price)
+        "difference" : float(round(price - real_price, 2))
     }
 
     database['sales'].append(temp_dict)
@@ -152,9 +152,19 @@ def common_elements(menu, soldItems):
         return False
     
 
-    
+def get_sale(list_of_sales, id):
+    for sale in list_of_sales:
+        if sale.get('saleId') == id:
+            return sale
 
 
+def get_sales_with_cashier_id(list_of_sales, cashier_id):
+    result = []
+    for sale in list_of_sales:
+        if sale.get('cashierId') == cashier_id:
+            result.append(sale)
+
+    return result
 
 # Elmenti az adatbázist
 def save_database(database):
