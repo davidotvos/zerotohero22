@@ -3,17 +3,28 @@ import utils
 
 app = Flask(__name__)
 
+_database = {
+    "cashiers" : [
+        
+    ],
+
+    "sales" : [
+
+    ],
+
+    "menu" : [
+        
+    ],
+
+    "items" : [
+
+    ]
+}
+
 cashiers = []
 items = []
 menu = []
 sales = []
-
-class Cashier:
-    def __init__(self, firstname, lastname):
-        self.id = utils.generate_id(cashiers)
-        self.firstname = firstname
-        self.lastname = lastname
-
 
 
 @app.route('/', methods=['GET'])
@@ -31,7 +42,7 @@ def cashier():
         firstName = data['firstName']
         lastName = data['lastName']
 
-        utils.add_cashier(cashiers, sales, firstName, lastName)
+        utils.add_cashier(_database, firstName, lastName)
 
         return jsonify({'result' : 'Success!'})
 
@@ -40,8 +51,8 @@ def cashier():
 
 
 
-@app.route('/sale', methods=['POST'])
-def sale():
+@app.route('/sale/<id>', methods=['POST', 'GET'])
+def sale(id):
     if request.method == 'POST':
 
         data = request.get_json()
@@ -50,17 +61,19 @@ def sale():
         cashier_id = data['cashierId']
         price = data['price']
 
-        utils.add_sale(cashiers, sales, sold_items, cashier_id, price)
+        utils.add_sale(_database, sold_items, cashier_id, price)
 
         return jsonify({'result' : 'sucess'})
 
     else:
-        return sales
+        return "the id is: " + id
+
 
 
 if __name__ == '__main__':
-    utils.read_items_and_menu(items, menu)
-    utils.create_or_read_cashier_database(cashiers)
-    utils.create_or_read_sales_database(sales)
+    utils.create_database(_database)
+    utils.read_database(_database)
+    utils.import_items(_database, 'items.csv')
+    utils.import_menu(_database, 'menu.csv')
     
     app.run(debug=True)

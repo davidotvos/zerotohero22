@@ -1,84 +1,163 @@
-import string
 import uuid
 import os.path
+import json
+
 
 # generál egy egyedi id-t a cashiernek
-def generate_id(cashiers, sales):
+def generate_id(database):
     temp_id = uuid.uuid4()
 
-    if check_if_id_in_database(cashiers, sales, temp_id):
-        temp_id = generate_id(cashiers,sales)
+    if check_if_id_is_taken(database, temp_id):
+        temp_id = generate_id(database)
     
     return str(temp_id)
 
 
 # benne van-e az id az adatbázisban
-def check_if_id_in_database(database1, database2, id):
-    for d in database1:
-        if id == d[0]:
-            return True
-    
-    for d in database2:
-        if id == d[0]:
+def check_if_id_is_taken(database, id):
+    for ids in database['cashiers']:
+        if id == ids['id']:
             return True
     
     return False
 
 
-# menu és item lista beolvasás
-def read_items_and_menu(itemlist:list, menulist:list):
-    read_csv('items.csv', itemlist)
-    read_csv('menu.csv', menulist)
+# itemek beolvasása
+def import_items(database, filename):
+    try:
+        for line in open(filename):
+            csv_row = line.split(';')
+            temp_dict = {
+                'name' : csv_row[0].lower(),
+                'price' : csv_row[1].strip()
+            }
+            database['items'].append(temp_dict)
+
+    except:
+        print("items.csv nem importálható")
 
 
-# csv fájl olvasása soronként
-def read_csv(filename, list:list):
-    for line in open(filename):
-        csv_row = line.split(';')
-        list.append(csv_row)
+# menu beolvasása
+def import_menu(database, filename):
+    try:
+        for line in open(filename):
+            csv_row = line.split(';')
+            
+            temp_dict = {
+                'price' : csv_row[0],
+                'name' : csv_row[1].lower(),
+                'items' : [n.strip().lower() for n in csv_row[2:]]
+            }
+            
+            database['menu'].append(temp_dict)
+    
+    except:
+        print("menu.csv nem importálható")
 
 
-# Ha nem létezik a cashier adatbázis csinál egyet, ha létezik beolvassa
-def create_or_read_cashier_database(cashiers):
-    if os.path.exists('cashiers.csv'):
-        read_csv('cashiers.csv', cashiers)
+# Ha nem létezik az adatbázis csinál egyet, ha létezik beolvassa
+def read_database(database):
+    filename = 'database.csv'
+    with open(filename, 'r') as f:
+        data = json.load(f)
+        database['cashiers'] = data['cashiers']
+        database['sales'] = data['sales']
+        database['items'] = data['items']
+        database['menu'] = data['menu']
 
-    else:
-        f = open('cashiers.csv', 'w')
 
-
-# Ha nem létezik a sales adatbázis csinál egyet, ha létezik beolvassa
-def create_or_read_sales_database(sales):
-    if os.path.exists('salescsv'):
-        read_csv('cashiers.csv', sales)
-
-    else:
-        f = open('sales.csv', 'w')
+def create_database(database):
+    if not os.path.isfile('database.csv'):
+        with open('database.csv', 'w') as f:
+            json.dump(database, f)
 
 
 # Cashier hozzáadása
-def add_cashier(cashiers, sales, firstName, lastName):
-    templi = [generate_id(cashiers, sales), firstName, lastName]
-    cashiers.append(templi)
-    save_cashiers(cashiers)
+def add_cashier(database, firstName, lastName):
+    temp_dict = {
+        "id" : generate_id(database),
+        "firstName" : firstName,
+        "lastName" : lastName
+    }
+
+    database['cashiers'].append(temp_dict)
+    save_database(database)
+    
+
+def add_sale(database, soldItems, cashierId, price):
+    real_price = 0
+    sale_id = generate_id(database)
+    menu_size = 0
 
 
-# Sale hozzáadása
-def add_sale(cashiers, sales, solditems, cashierid, price):
-    templi = [generate_id(cashiers, sales), solditems, cashierid, price]
-    sales.append(templi)
-    save_sales(sales)
+    big_bucket_menu = database['menu'][0]['items']
+    small_bucket_menu = database['menu'][1]['items']
+    chicken_burger_menu = database['menu'][2]['items']
+    double_burger_menu = database['menu'][3]['items']
+
+    if common_elements(big_bucket_menu, soldItems):
+        real_price += float(database['menu'][0]['price'])
+        soldItems = [item for item in soldItems if item not in big_bucket_menu]
+        soldItems.append('Big Bucket Menu')
+        menu_size += 1
+    elif common_elements(small_bucket_menu, soldItems):
+        real_price += float(database['menu'][1]['price'])
+        soldItems = [item for item in soldItems if item not in small_bucket_menu]
+        soldItems.append('Small Bucket Menu')
+        menu_size += 1
+    elif common_elements(chicken_burger_menu, soldItems):
+        real_price += float(database['menu'][2]['price'])
+        soldItems = [item for item in soldItems if item not in chicken_burger_menu]
+        soldItems.append('Chicken Burger Menu')
+        menu_size += 1
+    elif common_elements(double_burger_menu, soldItems):
+        real_price += float(database['menu'][3]['price'])
+        soldItems = [item for item in soldItems if item not in double_burger_menu]
+        soldItems.append('Double Burger Menu')
+        menu_size += 1
+
+    if len(soldItems) > menu_size:
+        for item in soldItems:
+            for food in database['items']:
+                if food.get('name') == item:
+                    real_price += float(food.get('price'))
+
+    if real_price < float(price):
+        status = "REFUND"
+    else:
+        status = "PROCESSED"
 
 
-# Elmenti a cashierek adatait
-def save_cashiers(cashiers):
-    with open('cashiers.csv', 'w') as f:
-        for line in cashiers:
-            f.write(';'.join(line) + '\n')
+    temp_dict = {
+        "saleId" : sale_id,
+        "soldItems" : soldItems,
+        "cashierId" : cashierId,
+        "price" : price,
+        "status" : status,
+        "difference" : float(price - real_price)
+    }
+
+    database['sales'].append(temp_dict)
+    save_database(database)
 
 
-# Elmenti a sales adatait
-def save_sales(sales):
-    with open('sales.csv', 'w') as f:
-        for line in sales:
-            f.write(';'.join(line))
+
+def common_elements(menu, soldItems):
+
+    common = list(set(menu).intersection(soldItems))
+
+    if len(common) == len(menu):
+        return True
+    else:
+        return False
+    
+
+    
+
+
+
+# Elmenti az adatbázist
+def save_database(database):
+    with open('database.csv', 'w') as f:
+        json.dump(database, f)
+
